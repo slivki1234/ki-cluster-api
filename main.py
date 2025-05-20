@@ -37,4 +37,4 @@ async def cluster_files(request: Request):
     else:
         return "Unsortiert"
 
-    return result
+    result = {smart_group_name(v): v for v in clusters.values()}
