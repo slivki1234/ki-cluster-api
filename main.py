@@ -26,5 +26,15 @@ async def cluster_files(request: Request):
             continue
         clusters.setdefault(label, []).append(file_list[i])
 
-    result = {common_prefix(v): v for v in clusters.values()}
+    def smart_group_name(file_list):
+    prefix = common_prefix(file_list)
+
+    # Wenn Prefix zu kurz, nimm GPT oder einfach Ordner „Unsortiert“
+    if len(file_list) >= 2 and len(prefix) >= 4:
+        return prefix.strip("_- ")
+    elif len(file_list) == 1:
+        return file_list[0].split(".")[0].strip("_- ")  # z. B. "190 Hausaufgaben"
+    else:
+        return "Unsortiert"
+
     return result
