@@ -30,11 +30,12 @@ async def cluster_files(request: Request):
         if not isinstance(file_list, list):
             return {"error": "Expected a list of filenames"}
 
+        if not file_list or not all(isinstance(x, str) for x in file_list):
+            return {"error": "Invalid input. Expected list of strings."}
+
         if len(file_list) < 2:
             name = smart_group_name(file_list)
             return {name: file_list}
-if not file_list or not all(isinstance(x, str) for x in file_list):
-    return {"error": "Invalid input. Expected list of strings."}
 
         embeddings = model.encode(file_list)
         clusterer = hdbscan.HDBSCAN(min_cluster_size=2)
@@ -42,7 +43,6 @@ if not file_list or not all(isinstance(x, str) for x in file_list):
 
         clusters = {}
         for i, label in enumerate(labels):
-            # Auch Einzeldateien aufnehmen
             if label == -1:
                 clusters.setdefault(f"Einzeln: {file_list[i].rsplit('.', 1)[0]}", []).append(file_list[i])
             else:
