@@ -43,10 +43,10 @@ async def cluster_files(request: Request):
 
         clusters = {}
         for i, label in enumerate(labels):
-            if label == -1:
-                clusters.setdefault(f"Einzeln: {file_list[i].rsplit('.', 1)[0]}", []).append(file_list[i])
-            else:
-                clusters.setdefault(label, []).append(file_list[i])
+    if label == -1:
+        continue  # Einzeldateien werden nicht gruppiert
+    clusters.setdefault(label, []).append(file_list[i])
+
 
         result = {smart_group_name(v): v for v in clusters.values()}
         return result
