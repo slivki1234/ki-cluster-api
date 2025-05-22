@@ -4,12 +4,13 @@ import hdbscan
 import json
 import re
 from os.path import commonprefix
+import os
+import uvicorn
 
 app = FastAPI()
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def cleaned_filename(name):
-    # Entfernt Klammern, Zahlen und ersetzt Unter-/Bindestriche
     name = re.sub(r'\(.*?\)', '', name)  # (1), (2)
     name = re.sub(r'\d+', '', name)      # Zahlen
     name = name.replace('_', ' ').replace('-', ' ')
@@ -43,3 +44,8 @@ async def cluster_files(request: Request):
 
     result = {smart_group_name(v): v for v in clusters.values()}
     return result
+
+# ✅ Wichtig für Render: automatischer Port
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
