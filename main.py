@@ -33,6 +33,8 @@ async def cluster_files(request: Request):
         if len(file_list) < 2:
             name = smart_group_name(file_list)
             return {name: file_list}
+if not file_list or not all(isinstance(x, str) for x in file_list):
+    return {"error": "Invalid input. Expected list of strings."}
 
         embeddings = model.encode(file_list)
         clusterer = hdbscan.HDBSCAN(min_cluster_size=2)
