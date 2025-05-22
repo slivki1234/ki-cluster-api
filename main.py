@@ -61,4 +61,6 @@ async def cluster_files(request: Request):
 # ✅ Für Render: automatischer Port
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
+    print(f"💡 Starte auf PORT {port} ...")
     uvicorn.run("main:app", host="0.0.0.0", port=port)
+
