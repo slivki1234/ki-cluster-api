@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from sentence_transformers import SentenceTransformer
 import hdbscan
 import re
@@ -7,14 +8,26 @@ import os
 import uvicorn
 
 app = FastAPI()
+
+# 🧠 Modell laden
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
+# 🌐 CORS für lifeos.live aktivieren
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://lifeos.live"],  # oder ["*"] zum Testen
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+# 🔤 Dateinamen bereinigen
 def cleaned_filename(name):
     name = re.sub(r'\(.*?\)', '', name)  # Entferne (1), (2), etc.
     name = re.sub(r'\d+', '', name)      # Entferne Zahlen
     name = name.replace('_', ' ').replace('-', ' ')
     return name.strip()
 
+# 📁 Gruppennamen schlau ableiten
 def smart_group_name(files):
     base_names = [cleaned_filename(f.rsplit('.', 1)[0]) for f in files]
     if len(base_names) == 1:
@@ -22,6 +35,7 @@ def smart_group_name(files):
     prefix = commonprefix(base_names).strip()
     return prefix if len(prefix) >= 3 else "Unsortiert"
 
+# 🚀 API-Endpunkt
 @app.post("/cluster")
 async def cluster_files(request: Request):
     try:
@@ -58,9 +72,8 @@ async def cluster_files(request: Request):
         traceback.print_exc()
         return {"error": "Internal server error", "details": str(e)}
 
-# ✅ Für Render: automatischer Port
+# 🟢 Render-Start
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     print(f"💡 Starte auf PORT {port} ...")
     uvicorn.run("main:app", host="0.0.0.0", port=port)
-
