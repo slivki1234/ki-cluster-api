@@ -12,15 +12,15 @@ app = FastAPI()
 # 🧠 Modell laden
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# 🌐 CORS für lifeos.live aktivieren (Frontend-Domain erlauben)
+# 🌐 CORS für lifeos.live aktivieren (Zugriff aus Netcup-Frontend erlauben)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://lifeos.live"],  # Für Render-API Zugriff aus Netcup-Frontend
+    allow_origins=["https://lifeos.live"],
     allow_methods=["*"],
     allow_headers=["*"]
 )
 
-# 🔤 Hilfsfunktion: Dateinamen bereinigen
+# 🔤 Dateinamen bereinigen
 def cleaned_filename(name):
     name = re.sub(r'\(.*?\)', '', name)
     name = re.sub(r'\d+', '', name)
@@ -35,40 +35,36 @@ def smart_group_name(files):
     prefix = commonprefix(base_names).strip()
     return prefix if len(prefix) >= 3 else "Unsortiert"
 
-# 🚀 API-Endpunkt für das Clustering
+# 🚀 API-Endpunkt für Clustering
 @app.post("/cluster")
 async def cluster_files(request: Request):
     try:
         file_list = await request.json()
 
         # Validierung
-        if not isinstance(file_list, list):
-            return {"error": "Expected a list of filenames"}
-        if not file_list or not all(isinstance(x, str) for x in file_list):
-            return {"error": "Invalid input. Expected list of strings."}
+        if not isinstance(file_list, list) or not all(isinstance(x, str) for x in file_list):
+            return {"error": "Invalid input. Expected a list of strings."}
 
-        # Nur 1 Datei → keine Clustering nötig
         if len(file_list) < 2:
             name = smart_group_name(file_list)
             return {name: file_list}
 
-        # Vektorisierung und Clustering
+        # Vektorisierung & Clustering
         embeddings = model.encode(file_list)
         clusterer = hdbscan.HDBSCAN(min_cluster_size=2)
         labels = clusterer.fit_predict(embeddings)
 
-        # Clustern
+        # Cluster-Mapping
         clusters = {}
         for i, label in enumerate(labels):
             if label == -1:
-                continue  # Einzeldateien werden ignoriert
+                continue
             clusters.setdefault(label, []).append(file_list[i])
 
         if not clusters:
             return {"Unsortiert": file_list}
 
-        # Gruppennamen berechnen
-        result = {smart_group_name(v): v for v in clusters.values()}
+        result = {smart_group_name(files): files for files in clusters.values()}
         return result
 
     except Exception as e:
@@ -76,7 +72,7 @@ async def cluster_files(request: Request):
         traceback.print_exc()
         return {"error": "Internal server error", "details": str(e)}
 
-# 🟢 Startbefehl für Render
+# 🟢 Render Start
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     print(f"💡 Starte auf PORT {port} ...")
