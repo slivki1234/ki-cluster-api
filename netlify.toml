@@ -1,0 +1,8 @@
+[build]
+  publish = "./"  # Das ist das Verzeichnis mit index.html
+  functions = "netlify/functions"  # Pfad zur Funktion
+
+[[redirects]]
+  from = "/api/sendEmail"
+  to = "/.netlify/functions/sendEmail"
+  status = 200
